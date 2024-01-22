@@ -12,6 +12,7 @@ import ma.fstt.microservicereport.repository.ExaminaterRepository;
 import ma.fstt.microservicereport.repository.ReportRepository;
 import ma.fstt.microservicereport.repository.VehiculeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -35,9 +36,30 @@ public class ReportController {
     public VehiculeRepository vehiculeRepository;
     @Autowired
     public ReportRepository reportRepository;
+
+    private final AuthService authService;
+
+    public ReportController(ExaminaterRepository examinaterRepository, VehiculeRepository vehiculeRepository, AuthService authService) {
+        this.examinaterRepository = examinaterRepository;
+        this.vehiculeRepository = vehiculeRepository;
+        this.authService = authService;
+    }
+
+    private String extractTokenFromHeader(String authorizationHeader) {
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            return authorizationHeader.substring(7);
+        }
+        return null;
+    }
+
     @PostMapping("/add")
-    public ResponseEntity<MessageResponse> addReport(@RequestBody AddReportRequest addReportRequest) {
+    public ResponseEntity<MessageResponse> addReport(@RequestBody AddReportRequest addReportRequest,@RequestHeader("Authorization") String authorizationHeader) {
         try {
+            // Extract the token from the Authorization header
+            String token = extractTokenFromHeader(authorizationHeader);
+            if (!authService.isValidExaminaterToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse(401, "Not authorized"));
+            }
             Vehicule vehicule;
             Examinater examinater;
             //find if vehicule exist
@@ -92,8 +114,13 @@ public class ReportController {
         }
     }
     @GetMapping("/getAll")
-    public ResponseEntity<List<Report>> getAllReports() {
+    public ResponseEntity<Object> getAllReports(@RequestHeader("Authorization") String authorizationHeader) {
         try {
+            // Extract the token from the Authorization header
+            String token = extractTokenFromHeader(authorizationHeader);
+            if (!authService.isValidEmployeeToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse(401, "Not authorized"));
+            }
             List<Report> reports = reportRepository.findAll();
 
             return ResponseEntity.ok(reports);
@@ -103,8 +130,13 @@ public class ReportController {
     }
 
     @GetMapping("/{reportId}")
-    public ResponseEntity<ReportWithExaminaterAndVehicule> getReportWithExaminaterAndVehicule(@PathVariable String reportId) {
+    public ResponseEntity<Object> getReportWithExaminaterAndVehicule(@PathVariable String reportId,@RequestHeader("Authorization") String authorizationHeader) {
         try {
+            // Extract the token from the Authorization header
+            String token = extractTokenFromHeader(authorizationHeader);
+            if (!authService.isValidEmployeeToken(token)) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse(401, "Not authorized"));
+            }
             ReportWithExaminaterAndVehicule reportWithExaminaterAndVehicule = reportRepository.findReportWithExaminaterAndVehicule(reportId);
 
             if (reportWithExaminaterAndVehicule != null) {
