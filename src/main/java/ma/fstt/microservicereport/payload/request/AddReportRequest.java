@@ -23,6 +23,5 @@ public class AddReportRequest {
 
     @NotBlank
     private String matricule;
-    @NotBlank
-    private String examinaterId;
+
 }

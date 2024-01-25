@@ -35,4 +35,13 @@ public class AuthService {
         ResponseEntity<TokenValidationResponse> responseEntity = restTemplate.postForEntity(validationUrl, validationRequest, TokenValidationResponse.class);
         return responseEntity.getBody().isResponse() == true && "employee".equals(responseEntity.getBody().getMessage());
     }
+
+    public String getIdFromToken(String token) {
+        String validationUrl = authServiceUrl + "/get-id";
+        TokenValidationRequest validationRequest = new TokenValidationRequest();
+        validationRequest.setToken(token);
+        ResponseEntity<TokenValidationResponse> responseEntity = restTemplate.postForEntity(validationUrl, validationRequest, TokenValidationResponse.class);
+        return responseEntity.getBody().getMessage();
+    }
+
 }

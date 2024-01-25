@@ -60,8 +60,11 @@ public class ReportController {
             if (!authService.isValidExaminaterToken(token)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new MessageResponse(401, "Not authorized"));
             }
+            //get id from token
+            String id = authService.getIdFromToken(token);
             Vehicule vehicule;
             Examinater examinater;
+
             //find if vehicule exist
             Optional<Vehicule> examinatedVehicule= vehiculeRepository.findByMatricule(addReportRequest.getMatricule());
             if (!examinatedVehicule.isPresent())
@@ -69,7 +72,7 @@ public class ReportController {
             vehicule = examinatedVehicule.get();
 
             //find if examinater exist
-            Optional<Examinater> examinaterOptional= examinaterRepository.findById(addReportRequest.getExaminaterId());
+            Optional<Examinater> examinaterOptional= examinaterRepository.findById(id);
             if (!examinaterOptional.isPresent())
                 return ResponseEntity.badRequest().body(new MessageResponse(404, "Examinater not exist"));
             examinater = examinaterOptional.get();
